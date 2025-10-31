@@ -351,9 +351,12 @@ class ModelExecutor:
     
     async def run(self):
         """Main execution loop."""
+        # Wait for active model if not available
         if not self.model:
-            logger.error("No active model found, cannot execute")
-            return
+            logger.warning("No active model found, waiting for one to be created...")
+            while not self.model:
+                await asyncio.sleep(60)  # Check every minute
+                await self.load_active_model()
         
         # Start listening for candles
         await self.listen_for_candles()

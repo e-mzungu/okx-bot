@@ -4,7 +4,7 @@ import asyncio
 import sys
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pandas as pd
 from dataclasses import asdict
 
@@ -364,10 +364,11 @@ class ModelGenerator:
         logger.info("Starting model generation")
         
         # Fetch historical data
-        training_start = datetime.utcnow() - timedelta(
+        now = datetime.now(timezone.utc)
+        training_start = now - timedelta(
             days=self.modelgen_config.get('training_period_days', 180)
         )
-        validation_start = datetime.utcnow() - timedelta(
+        validation_start = now - timedelta(
             days=self.modelgen_config.get('validation_period_days', 30)
         )
         

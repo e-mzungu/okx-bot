@@ -6,7 +6,6 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 -- Candles table for storing OHLCV data
 CREATE TABLE IF NOT EXISTS candles (
-    id BIGSERIAL PRIMARY KEY,
     symbol VARCHAR(20) NOT NULL,
     interval VARCHAR(10) NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -19,7 +18,7 @@ CREATE TABLE IF NOT EXISTS candles (
     trades_count INTEGER,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(symbol, interval, timestamp)
+    PRIMARY KEY(symbol, interval, timestamp)
 );
 
 -- Convert candles to hypertable (if TimescaleDB is available)
@@ -39,7 +38,6 @@ CREATE INDEX IF NOT EXISTS idx_candles_symbol_timestamp
 
 -- Features table for technical indicators
 CREATE TABLE IF NOT EXISTS features (
-    id BIGSERIAL PRIMARY KEY,
     symbol VARCHAR(20) NOT NULL,
     interval VARCHAR(10) NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -66,7 +64,7 @@ CREATE TABLE IF NOT EXISTS features (
     volume_sma DECIMAL(30, 8),
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(symbol, interval, timestamp)
+    PRIMARY KEY(symbol, interval, timestamp)
 );
 
 -- Convert features to hypertable (if TimescaleDB is available)

@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
 import pandas as pd
-import pandas_ta as ta
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -17,6 +16,7 @@ from common.logging import setup_logging
 from common.db import get_db, Model, Candle
 from common.streams import get_redis, Streams
 from common.models import Signal, SignalType
+from common import indicators as ta
 
 logger = setup_logging('executor')
 
@@ -216,17 +216,17 @@ class ModelExecutor:
         
         macd = ta.macd(df['close'])
         if macd is not None and isinstance(macd, pd.DataFrame):
-            df['macd'] = macd['MACD_12_26_9']
-            df['macd_signal'] = macd['MACDs_12_26_9']
-            df['macd_histogram'] = macd['MACDh_12_26_9']
+            df['macd'] = macd['MACD']
+            df['macd_signal'] = macd['MACDs']
+            df['macd_histogram'] = macd['MACDh']
         
         df['atr_14'] = ta.atr(df['high'], df['low'], df['close'], length=14)
         
-        bbands = ta.bbands(df['close'], length=20)
+        bbands = ta.bollinger_bands(df['close'], length=20)
         if bbands is not None and isinstance(bbands, pd.DataFrame):
-            df['bollinger_upper'] = bbands['BBU_20_2.0']
-            df['bollinger_middle'] = bbands['BBM_20_2.0']
-            df['bollinger_lower'] = bbands['BBL_20_2.0']
+            df['bollinger_upper'] = bbands['BBU']
+            df['bollinger_middle'] = bbands['BBM']
+            df['bollinger_lower'] = bbands['BBL']
         
         df['volume_sma'] = ta.sma(df['volume'], length=20)
         

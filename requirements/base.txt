@@ -14,7 +14,6 @@ hiredis==2.2.3
 # Data processing
 pandas==2.2.0
 numpy==1.26.3
-pandas-ta==0.3.14b0
 
 # Machine Learning / Strategy
 scikit-learn==1.4.0

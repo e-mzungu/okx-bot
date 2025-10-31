@@ -1,0 +1,188 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: okx-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-okx_bot}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - okx-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: okx-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - okx-network
+
+  ingestor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: okx-ingestor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-okx_bot}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - OKX_API_KEY=${OKX_API_KEY}
+      - OKX_API_SECRET=${OKX_API_SECRET}
+      - OKX_PASSPHRASE=${OKX_PASSPHRASE}
+    command: python -m services.ingestor.main
+    volumes:
+      - ./configs:/app/configs
+      - ./services:/app/services
+    networks:
+      - okx-network
+    restart: unless-stopped
+
+  modelgen:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: okx-modelgen
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-okx_bot}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: python -m services.modelgen.main
+    volumes:
+      - ./configs:/app/configs
+      - ./services:/app/services
+    networks:
+      - okx-network
+    restart: unless-stopped
+
+  executor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: okx-executor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-okx_bot}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: python -m services.executor.main
+    volumes:
+      - ./configs:/app/configs
+      - ./services:/app/services
+    networks:
+      - okx-network
+    restart: unless-stopped
+
+  trader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: okx-trader
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-okx_bot}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - OKX_API_KEY=${OKX_API_KEY}
+      - OKX_API_SECRET=${OKX_API_SECRET}
+      - OKX_PASSPHRASE=${OKX_PASSPHRASE}
+    command: python -m services.trader.main
+    volumes:
+      - ./configs:/app/configs
+      - ./services:/app/services
+    networks:
+      - okx-network
+    restart: unless-stopped
+
+  # Optional: Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: okx-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - okx-network
+
+  # Optional: Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: okx-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - okx-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  okx-network:
+    driver: bridge
+

@@ -1,0 +1,33 @@
+# Core dependencies
+python-dotenv==1.0.0
+pyyaml==6.0.1
+asyncio==3.4.3
+
+# Database
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Redis
+redis[hiredis]==5.0.1
+hiredis==2.2.3
+
+# Data processing
+pandas==2.2.0
+numpy==1.26.3
+pandas-ta==0.3.14b0
+
+# Machine Learning / Strategy
+scikit-learn==1.4.0
+numba==0.59.0
+
+# HTTP clients
+httpx==0.26.0
+websockets==12.0
+
+# Monitoring
+prometheus-client==0.19.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2024.1
+

@@ -1,0 +1,81 @@
+# BTC Trading Platform Configuration
+
+# Application
+app:
+  name: "okx-bot"
+  mode: "paper"  # paper, shadow, live
+  symbol: "BTC-USDT"
+  interval: "1m"
+  version: "1.0.0"
+
+# Database
+database:
+  host: "${DB_HOST:-localhost}"
+  port: "${DB_PORT:-5432}"
+  name: "${DB_NAME:-okx_bot}"
+  user: "${DB_USER:-postgres}"
+  password: "${DB_PASSWORD:-postgres}"
+  pool_size: 10
+
+# Redis
+redis:
+  host: "${REDIS_HOST:-localhost}"
+  port: "${REDIS_PORT:-6379}"
+  db: 0
+  decode_responses: true
+  stream_maxlen: 10000
+
+# OKX API
+okx:
+  api_key: "${OKX_API_KEY}"
+  api_secret: "${OKX_API_SECRET}"
+  passphrase: "${OKX_PASSPHRASE}"
+  sandbox: true  # Set to false for production
+  rate_limit: 20  # requests per second
+
+# Ingestor
+ingestor:
+  backfill_days: 180
+  batch_size: 1000
+  retry_attempts: 3
+  retry_delay: 5
+
+# Model Generator
+modelgen:
+  training_period_days: 180
+  validation_period_days: 30
+  min_sharpe_ratio: 1.2
+  min_win_rate: 0.45
+  min_profit_factor: 1.5
+  max_drawdown_pct: 0.15
+
+# Executor
+executor:
+  check_interval: 60  # seconds
+  signal_timeout: 300  # seconds
+  max_signals_per_minute: 5
+
+# Trader
+trader:
+  position_size_usdt: 100
+  max_position_size_usdt: 1000
+  max_daily_loss_usdt: 200
+  max_consecutive_losses: 3
+  slippage_pct: 0.001
+  fee_pct: 0.001  # 0.1% trading fee
+
+# Risk Management
+risk:
+  max_leverage: 1.0  # Spot trading
+  max_open_positions: 1
+  circuit_breaker_enabled: true
+  kill_switch_enabled: true
+
+# Logging
+logging:
+  level: "INFO"
+  format: "json"
+  file: "/var/log/okx-bot/app.log"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
